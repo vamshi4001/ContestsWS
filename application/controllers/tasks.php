@@ -5,6 +5,8 @@ require APPPATH.'/libraries/REST_Controller.php';
 
 class Data extends REST_Controller
 {
+
+	// Get Tasks Data 
 	
 	function getTheatres_get(){		
 		$this->db->from("theatres");
