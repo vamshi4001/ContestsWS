@@ -3,7 +3,7 @@
 // This can be removed if you use __autoload() in config.php OR use Modular Extensions
 require APPPATH.'/libraries/REST_Controller.php';
 
-class Data extends REST_Controller
+class User extends REST_Controller
 {	
 	function getMyTickets_get(){
 		
@@ -29,7 +29,7 @@ class Data extends REST_Controller
 			$userid = $this->get('userid');
 		}
 		if($userid){
-			$queryString = 'SELECT id, emailid, fullname, contactnumber, cityid from users where id ='.$userid;			
+			$queryString = 'SELECT id, emailid, fullname, mobilenumber, city from users where id ='.$userid;			
 			$query = $this->db->query($queryString);		
 		}
 		$response = array();
@@ -59,13 +59,18 @@ class Data extends REST_Controller
 		}
 		$this->response($response, 200);
 	}
-	function newUser_post ()
-	{
-		$name = $this->post('name');
-		$password = $this->post('password');
-		$email = $this->post('email');
-		$phone = $this->post('phone');
-		
+	function newUser_post (){
+		$uname 		= $this->post('uname');
+		$password 	= $this->post('password');
+		$email 		= $this->post('email');
+		$fullname 		= $this->post('fullname');		
+		$age 		= $this->post('age');		
+		$city 		= $this->post('city');		
+		$mobilenumber= $this->post('mobilenumber');
+		$address= $this->post('address');
+		$interests= $this->post('interests');
+		$fbtoken= $this->post('fbtoken');
+		$gplustoken= $this->post('interests');
 
 		
 		$response = array();

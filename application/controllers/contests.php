@@ -3,16 +3,17 @@
 // This can be removed if you use __autoload() in config.php OR use Modular Extensions
 require APPPATH.'/libraries/REST_Controller.php';
 
-class Tickets extends REST_Controller
+class Contests extends REST_Controller
 {
+
+	// Get Tasks Data 
 	
-	function generateTicket_get(){
-		// taskId, validity
+	
+	function getClosedContests_get(){
+
 	}
-	function getAllTickets_get(){
-		//taskId
+	function getContestDetails_get(){
+		//contestId
 	}
-	function invalidateTickets_get(){
-		//taskId
-	}
+	
 }
