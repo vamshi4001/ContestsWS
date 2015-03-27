@@ -48,7 +48,7 @@ class User extends REST_Controller
 			$password = $this->get('password');
 		}
 		if($uname && $password){
-			$queryString = 'SELECT id, emailid, fullname, contactnumber from users where emailid ="'.$uname.'" and password = "'.$password.'"';			
+			$queryString = 'SELECT id, emailid, fullname, mobilenumber from users where username ="'.$uname.'" and password = "'.$password.'"';			
 			$query = $this->db->query($queryString);		
 		}
 		$response = array();

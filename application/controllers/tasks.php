@@ -42,7 +42,14 @@ class Tasks extends REST_Controller
 	function getTaskDetails_get(){// get details and actions to be performned in a task given an id
 		//taskId, userid
 	}
-	function executeContest_get(taskId,){//trigger a task completion and then run contest based on timestamp
+	function executeContest_get(){//trigger a task completion and then run contest based on timestamp
+		get list fo active tasks whose timestamp < current timestamp
+		for each task
+			get all tickets which are active 
+			pick a random ticket
+			deactivate task 
+			reduce validity by 1 and have a trigger which sets isActive to false if validity is 0 related tickets
+			create an entry in contest table with this taskid, ticketid
 	}
 	function validateTask_get(){//Verify the validity of task and completion and add to db on success
 	}
