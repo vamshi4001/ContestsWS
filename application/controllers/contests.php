@@ -10,6 +10,7 @@ class Contests extends REST_Controller
 	
 	
 	function getClosedContests_get(){
+		//get all the closed contests 
 
 	}
 	function getContestDetails_get(){

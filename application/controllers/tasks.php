@@ -41,6 +41,9 @@ class Tasks extends REST_Controller
 	}	
 	function getTaskDetails_get(){// get details and actions to be performned in a task given an id
 		//taskId, userid
+		Based on userid check has to be performed, whether user has any active tickets for this task already
+		if yes display user what is task, when he performed task when is the contest scheduled.
+			if no return task details from task table and contents table
 	}
 	function executeContest_get(){//trigger a task completion and then run contest based on timestamp
 		get list fo active tasks whose timestamp < current timestamp
@@ -52,8 +55,20 @@ class Tasks extends REST_Controller
 			create an entry in contest table with this taskid, ticketid
 	}
 	function validateTask_get(){//Verify the validity of task and completion and add to db on success
+		Based on taskid get task type 
+		depending on task type input arguments defer 
+		if questions is task type, userid and choosed option will be input 
+			validate wheter that is right answer or not 
+		Thinking whether we require this or can be perform same thing on View and call generate ticket directly
 	}
 	function getClosedTasks_get(){
+		This function is also not required, there is nothing like closed tasks.
+		there will be only contests.
+	}
+	function getOpenSystemTask_get(){
+		This function is to get system task id at any time 
+		When user creates a new account or when he refers new user get the open system task
+		and generate ticket
 	}
 	function newUser_post (){
 		$name = $this->post('name');
