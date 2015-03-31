@@ -6,30 +6,96 @@ require APPPATH.'/libraries/REST_Controller.php';
 class Tasks extends REST_Controller
 {
 
-	// Get Tasks Data 
-	function getTasks_get(){
+	// Get All Active Tasks  
+	function getAllActiveTasks_get(){
 		
-		if($this->get('taskid')){
-			$taskid = $this->get('taskid');
-			$queryString = 'SELECT content_type, contentid, acronym, isactive, advertiserid, creation_date AS task_creation_date FROM tasks T WHERE id='.$taskid;
-			$query = $this->db->query($queryString);		
-		}
+		$queryString = 'SELECT id, content_type, contentid, acronym, isactive, advertiserid, creation_date 
+						FROM tasks T WHERE isactive = 1';
+		$query = $this->db->query($queryString);		
 		$response = array();
 		if ($query->num_rows() == 0) {
-			$response = array('message'=> 'No results');
+			$response = array('message'=> 'No Active Tasks');
 		} else{
 			$response = array('result' => $query->result());
 		}
 		$this->response($response, 200);
 	}
 
-	function getTaskDetails_get(){// get details and actions to be performned in a task given an id
-		//taskId, userid
-	/*	Based on userid check has to be performed, whether user has any active tickets for this task already
-		if yes display user what is task, when he performed task when is the contest scheduled.
-			if no return task details from task table and contents table*/
-	}
+	// Get Tasks Details for a specific taskid and userid
+	function getTaskDetails_get(){
+		
+		$response = array();
 
+		if($this->get('taskid') && $this->get('userid'))
+		{
+
+			$taskid = $this->get('taskid');
+			$userid = $this->get('userid');
+
+			$queryString = 'SELECT id, ticketnumber, validity, ticket_type, creation_date  
+							FROM tickets T WHERE isactive = 1 and taskid='.$taskid.' and userid ='.$userid;
+			$query = $this->db->query($queryString);
+
+			if ($query->num_rows() == 0) 
+			{
+				$response = array('message'=> 'No Ticket available for the user for this task');
+				// No tickets available for this userid and taskid combination. Fetching the Task Content to be displayed to the user.
+				
+				$queryString2 = 'SELECT content_type, contentid, advertiserid, creation_date 
+								 FROM tasks T WHERE isactive = 1 and taskid='.$taskid;
+				$query2 = $this->db->query($queryString2);
+				
+				if ($query2->num_rows() == 0) 
+				{
+					$response = array('message'=> 'Invalid Taskid');
+				} 
+				else
+				{
+					foreach ($query2->result() as $row)
+					{
+						$contenttype = $row->content_type;
+						if ($contenttype == 'QUESTIONS')
+						{
+							$queryString3 = 'SELECT id, question_text, options, correctAnswer, creation_date 
+											 FROM task_questions WHERE isactive = 1 and taskid='.$taskid;
+							$query3 = $this->db->query($queryString3);
+							if ($query3->num_rows() == 0) 
+							{
+								$response = array('message'=> 'Questions not available for this task');
+							} 
+							else
+							{
+								$response = array('result' => $query->result());
+							}
+						} 
+						elseif ($contenttype == 'VIDEO') 
+						{
+							# code...
+						}
+						elseif ($contenttype == 'FBLIKE') 
+						{
+							# code...
+						}
+						elseif ($contenttype == 'VOTING') 
+						{
+							# code...
+						}
+
+					}
+
+				}
+			} 
+			else
+			{
+				$response = array('result' => $query->result());
+			}	
+		}
+		else
+		{
+			$response = array('message'=> 'Either taskid or userid is NULL. Please pass both the parameters');
+		}
+		$this->response($response, 200);
+	}
 
 	function executeContest_post(){//trigger a task completion and then run contest based on timestamp
 		$currenttime = time(); // Get the current timestamp to be compared.
