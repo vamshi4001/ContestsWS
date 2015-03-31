@@ -44,9 +44,25 @@ class Tickets extends REST_Controller
 		}		
 		$this->response($response);	
 	}
+
 	function getAllTickets_get(){
-		//taskId
+		//userId
+
+		if($this->get('userid')){
+			$taskid = $this->get('userid');
+			//get all tickets this user has
+			$queryString = 'SELECT content_type, contentid, acronym, isactive, advertiserid, creation_date AS task_creation_date FROM tasks T WHERE id='.$taskid;
+			$query = $this->db->query($queryString);		
+		}
+		$response = array();
+		if ($query->num_rows() == 0) {
+			$response = array('message'=> 'No results');
+		} else{
+			$response = array('result' => $query->result());
+		}
+		$this->response($response, 200);
 	}
+
 	function invalidateTickets_get(){
 		//taskId
 	}
