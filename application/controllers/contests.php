@@ -13,7 +13,11 @@ class Contests extends REST_Controller
 		//get all the closed contests 
 		//Along with Contest details get description from task table to display
 		//This function is require to list all contests with description and completed time.
-		$queryString = 'SELECT content_type, contentid, acronym, isactive, advertiserid, creation_date AS task_creation_date FROM tasks T WHERE id='.$taskid;
+		$queryString = 'SELECT c.taskid, c.ticketid, c.completedat, t.ticketnumber, t.userid, u.username, u.fullname, u.emailid 
+						FROM contests c, tickets t, users u
+						WHERE c.ticketid = t.id
+						AND t.userid = u.id
+						ORDER BY c.taskid';
 		$query = $this->db->query($queryString);		
 		$response = array();
 		if ($query->num_rows() == 0) {

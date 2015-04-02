@@ -9,8 +9,7 @@ class Tasks extends REST_Controller
 	// Get All Active Tasks  
 	function getAllActiveTasks_get(){
 		
-		$queryString = 'SELECT id, content_type, contentid, acronym, isactive, advertiserid, creation_date 
-						FROM tasks T WHERE isactive = 1';
+		$queryString = 'SELECT id, content_type, contentid, acronym, isactive, advertiserid, creation_date FROM tasks T WHERE isactive = 1';
 		$query = $this->db->query($queryString);		
 		$response = array();
 		if ($query->num_rows() == 0) {
@@ -22,6 +21,7 @@ class Tasks extends REST_Controller
 	}
 
 	// Get Tasks Details for a specific taskid and userid
+
 	function getTaskDetails_get(){
 		
 		$response = array();
@@ -42,7 +42,7 @@ class Tasks extends REST_Controller
 				// No tickets available for this userid and taskid combination. Fetching the Task Content to be displayed to the user.
 				
 				$queryString2 = 'SELECT content_type, contentid, advertiserid, creation_date 
-								 FROM tasks T WHERE isactive = 1 and taskid='.$taskid;
+								 FROM tasks T WHERE isactive = 1 and id='.$taskid;
 				$query2 = $this->db->query($queryString2);
 				
 				if ($query2->num_rows() == 0) 
@@ -54,10 +54,10 @@ class Tasks extends REST_Controller
 					foreach ($query2->result() as $row)
 					{
 						$contenttype = $row->content_type;
-						if ($contenttype == 'QUESTIONS')
+						if ($contenttype == 'QUESTION')
 						{
 							$queryString3 = 'SELECT id, question_text, options, correctAnswer, creation_date 
-											 FROM task_questions WHERE isactive = 1 and taskid='.$taskid;
+											 FROM task_questions WHERE id='.$row->contentid;
 							$query3 = $this->db->query($queryString3);
 							if ($query3->num_rows() == 0) 
 							{
@@ -65,7 +65,7 @@ class Tasks extends REST_Controller
 							} 
 							else
 							{
-								$response = array('result' => $query->result());
+								$response = array('result' => $query3->result());
 							}
 						} 
 						elseif ($contenttype == 'VIDEO') 
@@ -96,20 +96,39 @@ class Tasks extends REST_Controller
 		}
 		$this->response($response, 200);
 	}
+	function pickwinner($num_of_winners, $taskid) {
+		$winners = array();
 
-	function executeContest_post(){//trigger a task completion and then run contest based on timestamp
-		$currenttime = time(); // Get the current timestamp to be compared.
+		$queryString = 'SELECT id, userid, ticketnumber, validity, ticket_type, isactive, creation_date 
+							FROM tickets T WHERE validity!=0 AND (taskid = '.$taskid.' OR ticket_type = \'REF\') 	
+							ORDER BY RAND()
+ 							LIMIT '.$num_of_winners;
+		$query = $this->db->query($queryString);
 
+		if ($query->num_rows() == 0) {
+			return $winners;//returning an empty array
+		} else{		
+			foreach ($query->result() as $row)
+			{
+				array_push($winners, $row->id);
+			}
+			return $winners;
+		}
+	}
+
+
+	function executeContest_get(){//trigger a task completion and then run contest based on timestamp
+		
 		//Get list of active tasks whose scheduled runtime of the task is less than current timestamp
 		$queryString1 = 'SELECT id, content_type, numofwinners, contentid, acronym, isactive, advertiserid, creation_date AS task_creation_date 
 						FROM tasks T 
-						WHERE iactive = 1 and scheduledruntime <='.$currenttime;
+						WHERE isactive = 1 and scheduledruntime <=NOW()';
 		$query1 = $this->db->query($queryString1);		
 		$response = array();
 		if ($query1->num_rows() == 0) {
-			$response = array('message'=> 'No results');
+			$response = array('message'=> 'No active taskid');
 		} else{		
-			$response = array('result' => $query1->result());
+			// $response = array('result' => $query1->result());
 
 			// Loop for each active task
 			foreach ($query1->result() as $row)
@@ -117,48 +136,30 @@ class Tasks extends REST_Controller
 				// Get all tickets for the selected active task
 				$taskid = $row->id;
 				$num_of_winners = $row->numofwinners;
-				$taskcompletedat = now();
-
+				
 				// Pick the winners for the current taskid
-				$winnerlist = pickwinner($num_of_winners, $taskid);
-
+				$winnerlist = $this->pickwinner($num_of_winners, $taskid);	
+				print_r($winnerlist);
 				// Invalidate the Task by updating the isactive field to 0 for the current taskid
 				$queryString2 = 'UPDATE tasks SET isactive = 0, last_update_date = now()
 								WHERE id='.$taskid;
 				$query2 = $this->db->query($queryString2);	
 
 				// Reduce the validity of ticket by 1 for the current taskid
-				$queryString3 = 'UPDATE tickets SET validity = validity - 1, last_update_date = now() 
-								WHERE (taskid='.$taskid.' OR ticket_type = 'REF') and validity!=0';
+				$queryString3 = 'UPDATE tickets SET validity = validity - 1, last_update_date = now() WHERE (taskid='.$taskid.' OR ticket_type = \'REF\') and validity!=0';
 				$query3 = $this->db->query($queryString3);	
 				
 				// Create entries in contest table with this taskid, ticketid
-				foreach ($winnerlist as $winner) {
-					$queryString4 = 'INSERT INTO contests(taskid, ticketid, completedat) values ('.$tadkid.', '.$winner.', '.$taskcompletedat.')';
+				foreach ($winnerlist as $winner) {					
+					$queryString4 = 'INSERT INTO contests(taskid, ticketid, completedat) values ('.$taskid.', '.$winner.', NOW())';
 					$query4 = $this->db->query($queryString4);	
+					$response = array('isSuccess'=> true, 'message'=>'contest executed successfully');
 				}
 			}
 		}
 		$this->response($response, 200);	
 	}
-
-	function pickwinner($num_of_winners, $taskid) {
-		$winners = array();
-		$queryString = 'SELECT id, userid, ticketnumber, validity, ticket_type, isactive, creation_date 
-							FROM tickets T WHERE validity!=0 AND (taskid = '.$taskid.' OR ticket_type = 'REF') 	
-							ORDER BY RAND()
- 							LIMIT '.$num_of_winners;
-		$query = $this->db->query($queryString);
-		if ($query->num_rows() == 0) {
-			return $winners;
-		} else{		
-			foreach ($query->result() as $row)
-			{
-				array_push($winners, $row->id);
-			}
-		}
-	}
-
+	
 	function validateTask_get(){//Verify the validity of task and completion and add to db on success
 	/*	Based on taskid get task type 
 		depending on task type input arguments defer 
@@ -186,26 +187,6 @@ class Tasks extends REST_Controller
 		}
 		$this->response($response, 200);
 
-	}
-	function newUser_post (){
-		$name = $this->post('name');
-		$password = $this->post('password');
-		$email = $this->post('email');
-		$phone = $this->post('phone');
-		
-
-		
-		$response = array();
-		$params = array('emailid' => $email, 
-				'password'	=> $password,
-				'fullname'=> $name,
-				'contactnumber'=> $phone,				
-		);
-		
-		$this->db->insert('users', $params);
-		
-		$response = array("message"=>"Loggedin successfully", "isSuccess"=>"true");
-		$this->response($response);	
 	}
 
 }

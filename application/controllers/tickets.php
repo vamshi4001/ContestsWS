@@ -1,6 +1,5 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+
 // This can be removed if you use __autoload() in config.php OR use Modular Extensions
 require APPPATH.'/libraries/REST_Controller.php';
 
@@ -16,10 +15,10 @@ class Tickets extends REST_Controller
 		$ticketType 	= $this->post('ticketType');
 		$time 			= microtime(true);
 		switch($ticketType){
-			case "general":
+			case "GEN":
 				$validity = 1;
 				break;
-			case "referral":
+			case "REF":
 				$validity = 2;
 				break;
 			default:
@@ -38,7 +37,7 @@ class Tickets extends REST_Controller
 			$acronym = $query->result()[0]->acronym;	
 			//taking the remainder of time in milli seconds, to get changing value from microtime
 			$ticket = $acronym.(string)round($time%100000).(string)(mt_rand(100, 999));
-			$insertString = "INSERT INTO `tickets`(`userid`, `taskid`, `validity`, `ticketnumber`, `creation_date`, `last_update_date`) VALUES ($userId,$taskId,$validity,'$ticket',NOW(),NOW());";
+			$insertString = "INSERT INTO `tickets`(`userid`, `taskid`, `validity`, `ticket_type`,`isactive`,`ticketnumber`, `creation_date`, `last_update_date`) VALUES ($userId,$taskId,$validity,'$ticketType',1,'$ticket',NOW(),NOW());";
 			$insertQuery = $this->db->query($insertString);	
 			$response = array('insertedId' => $this->db->insert_id(), "message"=>"Ticket generated successfully", "isSuccess"=>"true");
 		}		
@@ -49,14 +48,14 @@ class Tickets extends REST_Controller
 		//userId
 
 		if($this->get('userid')){
-			$taskid = $this->get('userid');
+			$userid = $this->get('userid');
 			//get all tickets this user has
-			$queryString = 'SELECT content_type, contentid, acronym, isactive, advertiserid, creation_date AS task_creation_date FROM tasks T WHERE id='.$taskid;
+			$queryString = 'SELECT ticketnumber, taskid, validity, ticket_type, isactive, creation_date FROM tickets T WHERE userid='.$userid;
 			$query = $this->db->query($queryString);		
 		}
 		$response = array();
 		if ($query->num_rows() == 0) {
-			$response = array('message'=> 'No results');
+			$response = array('message'=> 'No Tickets for this user');
 		} else{
 			$response = array('result' => $query->result());
 		}
