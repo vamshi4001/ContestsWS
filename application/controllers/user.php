@@ -74,4 +74,40 @@ class User extends REST_Controller
 		$response = array("message"=>"Registered successfully", "isSuccess"=>"true");
 		$this->response($response);	
 	}
+
+	function updateUser_post (){
+		$id			= $this->post('id')
+		$uname 		= $this->post('uname');
+		$password 	= $this->post('password');
+		$fullname 	= $this->post('fullname');		
+		$email 		= $this->post('email');
+		$age 		= $this->post('age');		
+		$city 		= $this->post('city');		
+		$mobilenumber= $this->post('mobilenumber');
+		$address= $this->post('address');
+		$interests= $this->post('interests');
+		$fbtoken= $this->post('fbtoken');
+		$gplustoken= $this->post('interests');
+
+		$response = array();
+		$params = array( 
+				'password'	=> md5($password),
+				'fullname'=> $fullname,
+				'emailid'=> $email,
+				'age'=> $age,
+				'city'=> $city,
+				'mobilenumber'=> $mobilenumber,				
+				'address'=> $address,
+				'interests'=> $interests,
+				"isActive"=>$isActive
+		);		
+		$this->db->where('id', $id);
+		$this->db->update('users', $params);
+		
+		$response = array("message"=>"User Details updated successfully", "isSuccess"=>"true");
+		$this->response($response);	
+	}
+
+
+
 }
